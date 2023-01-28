@@ -1,8 +1,13 @@
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import akvulcan from "../assets/img/ak47vulcan.png";
 import butterflyLore from "../assets/img/butterfly-lore.png";
 import m4a1printstream from "../assets/img/m4a1-printstream.png";
 import m4a4howl from "../assets/img/m4a4howl.png";
+import axios from "axios";
+import UserContext from "../contexts/UserContext";
+import { Link, useNavigate } from "react-router-dom";
+
 const productsMock = [
   {
     name: "Ak-47 Vulcan",
@@ -36,12 +41,68 @@ const productsMock = [
   },
 ];
 export default function HomePage() {
+  const { user } = useContext(UserContext);
+  const [products, setProducts] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  // useEffect(() => {
+  //   const config = {
+  //     headers: {
+  //       Authorization: `Bearer ${user.token}`,
+  //     },
+  //   };
+  //   const promise = axios.get("http://localhost:5000/products" ,config);
+  //   promise.then((res) => {
+  //     setProducts(res.data);
+  //   });
+  //   promise.catch((err) => {
+  //     alert(err.data.message);
+  //   });
+  //   // eslint-disable-next-line
+  // }, []);
+
+  function addToCart() {
+    if (!user) {
+      return alert(
+        "Você precisa estar logado para adicionar items ao carrinho!"
+      );
+    }
+    const request = {
+      name: products.name,
+      price: products.price,
+      image: products.image,
+    };
+    const promise = axios.post("http://localhost:5000/cart", request);
+    promise.then(() => {
+      navigate("/cart");
+    });
+    promise.catch((err) => {
+      alert(err.data.message);
+    });
+  }
+
   return (
     <StyledContainer>
+      <StyledSideBar isOpen={isOpen}>
+        <StyledSidebarList>
+          <Link to={"/home"} style={{ textDecoration: "none" }}>
+            <StyledSidebarListItem>Home</StyledSidebarListItem>
+          </Link>
+          <Link to={"/"} style={{ textDecoration: "none" }}>
+            <StyledSidebarListItem>Login</StyledSidebarListItem>
+          </Link>
+          <Link to={"/sign-up"} style={{ textDecoration: "none" }}>
+            <StyledSidebarListItem>Cadastro</StyledSidebarListItem>
+          </Link>
+        </StyledSidebarList>
+      </StyledSideBar>
       <StyledTopBar>
-        <ion-icon name="menu-outline"></ion-icon>
+        <ion-icon
+          onClick={() => setIsOpen(!isOpen)}
+          name="menu-outline"
+        ></ion-icon>
         CSGO Skins
-        <ion-icon name="bag-handle-outline"></ion-icon>
+        <ion-icon onClick={addToCart} name="bag-handle-outline"></ion-icon>
       </StyledTopBar>
       <StyledProductsContainer>
         {productsMock.map((p, i) => (
@@ -53,6 +114,16 @@ export default function HomePage() {
           </StyledProducts>
         ))}
       </StyledProductsContainer>
+      {/* <StyledProductsContainer>
+        {products.map((p, i) => (
+          <StyledProducts key={i}>
+            <ion-icon name="bag-add-outline"></ion-icon>
+            <img src={p.image} alt={p.name} />
+            <h1>{p.name}</h1>
+            <p>R$ {p.price}</p>
+          </StyledProducts>
+        ))}
+      </StyledProductsContainer> */}
     </StyledContainer>
   );
 }
@@ -154,4 +225,55 @@ const StyledProducts = styled.div`
     margin-top: 10px;
     color: #fbfbfb;
   }
+`;
+
+const StyledSideBar = styled.div`
+  width: 28%;
+  display: flex;
+  flex-direction: column;
+  background-color: #272d70;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  transform: translateX(${(props) => (props.isOpen ? "0" : "-100%")});
+  transition: transform 0.5s ease-in-out;
+  z-index: 2;
+  margin-left: -3px;
+  &::after {
+    content: "";
+    width: 1px;
+    background-color: #ccc;
+    position: absolute;
+    right: -1px;
+    top: 60px;
+    bottom: 0;
+    transform: translateX(100%);
+  }
+  @media (min-width: 768px) {
+    width: 15%;
+  }
+  @media (min-width: 1024px) {
+    width: 15%;
+  }
+  @media (min-width: 1440px) {
+    width: 15%;
+  }
+  @media (min-width: 1920px) {
+    width: 10%;
+  }
+`;
+const StyledSidebarList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin-top: 70px;
+`;
+const StyledSidebarListItem = styled.li`
+  padding: 10px;
+  border-bottom: 1px solid #fbfbfb;
+  font-family: "Ubuntu", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fbfbfb;
 `;
